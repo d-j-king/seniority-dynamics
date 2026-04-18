@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Seniority Dynamics — Theory</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Georgia', serif;
+    background: #fafaf8;
+    color: #1a1a1a;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+    line-height: 1.7;
+    font-size: 16px;
+  }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 36px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 36px 0 10px; letter-spacing: -0.2px; text-transform: uppercase; font-size: 11px; color: #999; letter-spacing: 0.1em; }
+  p { margin-bottom: 14px; color: #2a2a2a; }
+  .eq-block {
+    background: #1a1a1a;
+    color: #f0f0f0;
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 24px 0;
+    font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+    font-size: 15px;
+    line-height: 2;
+  }
+  .eq-main { font-size: 18px; color: #ffffff; margin-bottom: 8px; }
+  .eq-sub { font-size: 13px; color: #aaa; }
+  .term-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .term-sym {
+    font-family: 'SF Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 100px;
+    padding-top: 1px;
+  }
+  .term-body { flex: 1; }
+  .term-name { font-weight: 600; margin-bottom: 3px; font-size: 15px; }
+  .term-desc { color: #444; font-size: 14px; line-height: 1.5; }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tag-lazear { background: #dbeafe; color: #1e40af; }
+  .tag-lindbeck { background: #fce7f3; color: #9d174d; }
+  .tag-akerlof { background: #d1fae5; color: #065f46; }
+  .tag-noise { background: #fef3c7; color: #92400e; }
+  .slider-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .slider-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 10px 6px 0;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .slider-table td {
+    padding: 10px 10px 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: top;
+    font-size: 14px;
+  }
+  .slider-table td:first-child {
+    font-family: 'SF Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    width: 40px;
+  }
+  .slider-table td:nth-child(2) { font-weight: 600; width: 110px; }
+  .slider-table td:nth-child(3) { color: #555; }
+  .regime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .regime-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fff;
+  }
+  .regime-card-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .regime-card-cond { font-family: monospace; font-size: 12px; color: #888; margin-bottom: 6px; }
+  .regime-card-desc { font-size: 13px; color: #444; line-height: 1.5; }
+  .scene2 {
+    background: #1c1c2e;
+    color: #e0e0f0;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+  .scene2 p { color: #c0c0d8; }
+  .scene2 .eq-block { background: #0d0d1a; margin: 12px 0; }
+  .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e5e5; font-size: 12px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<h1>Why Seniority Persists</h1>
+<p class="subtitle">A quick guide to the model and its parameters</p>
+
+<h2>The Core Idea</h2>
+<p>
+Each person in the simulation has a fixed <strong>tenure</strong> (how long they've been around) and a fixed <strong>competence</strong> (how good they are). Their <strong>rank</strong> evolves over time pulled by three competing forces — plus random noise. The question is: which force wins?
+</p>
+<p>
+In almost every real organization, the seniority force wins. The simulation lets you dial up each force independently to see why, and to find the regimes where merit can compete.
+</p>
+
+<h2>The Equation</h2>
+<div class="eq-block">
+  <div class="eq-main">drᵢ = [ α(cᵢ − c̄) − β(rᵢ − sᵢ) − γHᵢ ] dt + σ dWᵢ</div>
+  <div class="eq-sub">Hᵢ = (1/N) Σⱼ max(0, τⱼ−τᵢ) · max(0, rᵢ−rⱼ)</div>
+</div>
+<p>
+Read it as: <em>the change in your rank each instant = merit pull + seniority pull + holdup pull + luck.</em>
+</p>
+
+<h2>Every Term Explained</h2>
+
+<div class="term-row">
+  <div class="term-sym" style="color:#3b82f6">α(cᵢ − c̄)</div>
+  <div class="term-body">
+    <div class="term-name">Meritocratic drift <span class="tag tag-lazear">α slider</span></div>
+    <div class="term-desc">Pulls your rank up if you're above-average competence, down if below. α controls how much the org actually rewards ability. In most orgs, α is small — talent is noticed slowly and incompletely.</div>
+  </div>
+</div>
+
+<div class="term-row">
+  <div class="term-sym" style="color:#22c55e">−β(rᵢ − sᵢ)</div>
+  <div class="term-body">
+    <div class="term-name">Seniority restoring force <span class="tag tag-lazear">β slider</span></div>
+    <div class="term-desc">
+      Pulls your rank back toward sᵢ — the rank your <em>tenure alone</em> predicts. Think of it as a spring: the further you've drifted from "your place in line," the harder it pulls you back.<br><br>
+      Where does this spring come from? Three sources: (1) <strong>deferred compensation</strong> — firms underpay juniors and overpay seniors on purpose; the future overpayment is a bond that breaks if seniority is skipped (Lazear 1979). (2) <strong>Tournament prizes</strong> — the pay gap between ranks is the incentive for everyone below; inverting rank compresses the prize (Lazear &amp; Rosen 1981). (3) <strong>Fairness norms</strong> — everyone watching recalibrates their expectations when the line is jumped (Akerlof &amp; Yellen 1990).
+    </div>
+  </div>
+</div>
+
+<div class="term-row">
+  <div class="term-sym" style="color:#ef4444">−γHᵢ</div>
+  <div class="term-body">
+    <div class="term-name">Insider holdup <span class="tag tag-lindbeck">γ slider</span></div>
+    <div class="term-desc">
+      Hᵢ is nonzero only when junior i is <em>currently outranking</em> some senior j. In that case, a force pushes i back down — proportional to how far above j they've risen and how much more senior j is.<br><br>
+      This is your "hostage" intuition (Lindbeck &amp; Snower 1984): seniors who've been displaced can withhold cooperation, context, and access, making the junior's contributions less legible to the org. The formula captures the magnitude of their leverage.
+    </div>
+  </div>
+</div>
+
+<div class="term-row">
+  <div class="term-sym" style="color:#f59e0b">σ dWᵢ</div>
+  <div class="term-body">
+    <div class="term-name">Noise <span class="tag tag-noise">σ slider</span></div>
+    <div class="term-desc">Random shocks — politics, visibility, project luck, manager turnover. Not IQ-on-a-bad-day. More like "a key project landed on your desk this quarter that made you look great or terrible." Not essential to the dynamics; set σ ≈ 0 for clean motion.</div>
+  </div>
+</div>
+
+<h2>The Variables on Each Dot</h2>
+<table class="slider-table">
+  <tr><th>Var</th><th>Name</th><th>What it means</th></tr>
+  <tr><td>τᵢ</td><td>Tenure</td><td>Fixed. Determines x-position on the scatter. Grows very slowly. The "age ordering."</td></tr>
+  <tr><td>cᵢ</td><td>Competence</td><td>Fixed. Shown as dot color — blue = low, red = high. Drawn from a distribution at start.</td></tr>
+  <tr><td>rᵢ</td><td>Rank</td><td>The state variable — the only thing that moves. Determines y-position. This is what the SDE governs.</td></tr>
+  <tr><td>sᵢ</td><td>Seniority target</td><td>The rank τᵢ <em>predicts</em> based on tenure order alone. The spring pulls rᵢ toward sᵢ.</td></tr>
+  <tr><td>Hᵢ</td><td>Holdup force</td><td>Computed from the current positions of all other agents. High when junior i is sitting above many seniors.</td></tr>
+</table>
+
+<h2>Parameter Regimes (the 5 tabs)</h2>
+<div class="regime-grid">
+  <div class="regime-card">
+    <div class="regime-card-title">Seniority dominates</div>
+    <div class="regime-card-cond">α/β = 0.2, γ moderate</div>
+    <div class="regime-card-desc">After mutiny, cloud snaps back to diagonal fast. Blue τ(rank, tenure) recovers fully. The normal org.</div>
+  </div>
+  <div class="regime-card">
+    <div class="regime-card-title">Meritocracy</div>
+    <div class="regime-card-cond">α/β = 6, γ ≈ 0</div>
+    <div class="regime-card-desc">Dots sort by color (red up, blue down). Orange τ(rank, comp) stays high. Tenure order is irrelevant.</div>
+  </div>
+  <div class="regime-card">
+    <div class="regime-card-title">Holdup fortress</div>
+    <div class="regime-card-cond">γ = 2.0, β = 0.2</div>
+    <div class="regime-card-desc">β is weak, so recovery after mutiny is driven by holdup alone — slower, lumpier, but still wins.</div>
+  </div>
+  <div class="regime-card">
+    <div class="regime-card-title">Phase boundary</div>
+    <div class="regime-card-cond">α ≈ β, γ small</div>
+    <div class="regime-card-desc">Neither wins cleanly. After mutiny the cloud settles loosely — both τ values are moderate. The interesting middle.</div>
+  </div>
+</div>
+
+<h2>Scene 2: The Replicator Layer</h2>
+<div class="scene2">
+  <p>Each senior now carries a <strong>hoarding intensity</strong> hᵢ ∈ [0,1] — how hard they're working to withhold institutional knowledge. The gold ring around a senior dot shows hᵢ.</p>
+  <div class="eq-block">
+    dhᵢ/dt = ε · vᵢ  −  δ · hᵢ<br>
+    <span style="color:#888; font-size:12px">vᵢ = # juniors currently outranking senior i</span>
+  </div>
+  <p>When a mutiny strikes, violation counts spike → hoarding intensifies → holdup force strengthens → seniority order is restored faster → violations drop → hoarding decays. The equilibrium defends itself endogenously. This is why top-down meritocratic reshuffles tend to fail: they trigger the very behavior (knowledge-hoarding) that reverses them.</p>
+</div>
+
+<h2>The Key Ratio to Remember</h2>
+<p>
+  <strong>α/β</strong> is the single number that determines which attractor you're in. Below ~0.5: seniority wins. Above ~2.0: merit wins. In between: mixed, sensitive to perturbations. Most real organizations sit around 0.1–0.3.
+</p>
+
+<div class="footer">
+  Lazear (1979) · Lazear &amp; Rosen (1981) · Lindbeck &amp; Snower (1984) · Akerlof &amp; Yellen (1990) · Pluchino et al. (2010) · Kuran (1989)
+</div>
+
+</body>
+</html>

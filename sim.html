@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seniority Dynamics</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      font-size: 13px;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 216px;
+      min-width: 216px;
+      background: #161b22;
+      border-right: 1px solid #21262d;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+    }
+
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f0f6fc;
+      letter-spacing: -0.3px;
+    }
+    .logo-sub {
+      font-size: 10px;
+      color: #484f58;
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #6e7681;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    /* Scene toggle */
+    .scene-row {
+      display: flex;
+      gap: 4px;
+    }
+    .scene-btn {
+      flex: 1;
+      padding: 6px 4px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #21262d;
+      color: #8b949e;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.12s;
+    }
+    .scene-btn:hover { background: #30363d; color: #c9d1d9; }
+    .scene-btn.active {
+      background: #1c3057;
+      border-color: #388bfd;
+      color: #79c0ff;
+    }
+
+    /* Sliders */
+    .sliders { display: flex; flex-direction: column; gap: 11px; }
+    .slider-item { display: flex; flex-direction: column; gap: 4px; }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .slider-name { color: #c9d1d9; font-size: 12px; }
+    .slider-sym { color: #8b949e; font-size: 10px; margin-left: 3px; }
+    .slider-val {
+      color: #58a6ff;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      border-radius: 2px;
+      background: #30363d;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #388bfd;
+      cursor: pointer;
+      border: 2px solid #161b22;
+      box-shadow: 0 0 0 1px #388bfd40;
+    }
+    input[type=range]:hover::-webkit-slider-thumb { background: #58a6ff; }
+
+    /* Buttons */
+    .btn-stack { display: flex; flex-direction: column; gap: 5px; }
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #21262d;
+      color: #c9d1d9;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.1s;
+      width: 100%;
+      text-align: left;
+    }
+    .btn:hover { background: #30363d; }
+    .btn.danger { border-color: #6e2222; color: #ff7b72; }
+    .btn.danger:hover { background: #da363320; border-color: #da3633; }
+    .btn-icon { font-size: 13px; opacity: 0.8; }
+
+    /* Stats */
+    .stat-block {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 10px 10px 8px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 10px; }
+    .stat-value {
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .blue { color: #4fc3f7; }
+    .orange { color: #ff7043; }
+
+    /* Hint */
+    .hint {
+      font-size: 10px;
+      color: #3d444d;
+      line-height: 1.7;
+      border-top: 1px solid #21262d;
+      padding-top: 12px;
+    }
+
+    /* Canvas container */
+    #canvas-container { flex: 1; overflow: hidden; }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+
+  <div>
+    <div class="logo">Seniority Dynamics</div>
+    <div class="logo-sub">SDE model of workplace rank. x = tenure percentile, y = rank percentile. Dashed = perfect seniority.</div>
+  </div>
+
+  <div>
+    <div class="section-label">Scene</div>
+    <div class="scene-row">
+      <button class="scene-btn active" id="btn-scene1" onclick="setScene(1)">Kinematic</button>
+      <button class="scene-btn" id="btn-scene2" onclick="setScene(2)">Replicator</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Parameters</div>
+    <div class="sliders">
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-name">Agents<span class="slider-sym">N</span></span>
+          <span class="slider-val" id="val-n">40</span>
+        </div>
+        <input type="range" id="n-slider" min="10" max="80" value="40" step="5"
+          oninput="onNChange(this.value)">
+      </div>
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-name">Merit<span class="slider-sym">α</span></span>
+          <span class="slider-val" id="val-alpha">0.30</span>
+        </div>
+        <input type="range" id="alpha-slider" min="0" max="2" value="0.3" step="0.05"
+          oninput="updateLabel('alpha', this.value)">
+      </div>
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-name">Seniority<span class="slider-sym">β</span></span>
+          <span class="slider-val" id="val-beta">1.50</span>
+        </div>
+        <input type="range" id="beta-slider" min="0" max="4" value="1.5" step="0.1"
+          oninput="updateLabel('beta', this.value)">
+      </div>
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-name">Holdup<span class="slider-sym">γ</span></span>
+          <span class="slider-val" id="val-gamma">0.50</span>
+        </div>
+        <input type="range" id="gamma-slider" min="0" max="2" value="0.5" step="0.05"
+          oninput="updateLabel('gamma', this.value)">
+      </div>
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-name">Noise<span class="slider-sym">σ</span></span>
+          <span class="slider-val" id="val-sigma">0.40</span>
+        </div>
+        <input type="range" id="sigma-slider" min="0" max="1.5" value="0.4" step="0.05"
+          oninput="updateLabel('sigma', this.value)">
+      </div>
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-name">Speed<span class="slider-sym">×</span></span>
+          <span class="slider-val" id="val-speed">1.0×</span>
+        </div>
+        <input type="range" id="speed-slider" min="0.05" max="3" value="1" step="0.05"
+          oninput="updateSpeedLabel(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Actions</div>
+    <div class="btn-stack">
+      <button class="btn" id="btn-pause" onclick="togglePause()">
+        <span class="btn-icon">⏸</span> Pause
+      </button>
+      <button class="btn danger" onclick="reshuffleMutiny()">
+        <span class="btn-icon">⚡</span> Mutiny — random
+      </button>
+      <button class="btn danger" onclick="meritocraticMutiny()">
+        <span class="btn-icon">⚡</span> Mutiny — merit
+      </button>
+      <button class="btn" onclick="resetSim()">
+        <span class="btn-icon">↺</span> Reset
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Live Stats</div>
+    <div class="stat-block">
+      <div class="stat-row">
+        <span class="stat-label blue">τ(rank, tenure)</span>
+        <span class="stat-value blue" id="stat-rt">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label orange">τ(rank, competence)</span>
+        <span class="stat-value orange" id="stat-rc">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">
+    High β → seniority dominates.<br>
+    High α → merit competes.<br>
+    High γ → seniors hold tight.<br>
+    Scene 2 → hoarding adapts.<br>
+    Hit ⚡ Mutiny to perturb.
+  </div>
+
+</div>
+
+<div id="canvas-container"></div>
+
+<script src="sim.js"></script>
+</body>
+</html>

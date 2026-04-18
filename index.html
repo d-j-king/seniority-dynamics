@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seniority Dynamics</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --text: #c9d1d9;
+    --muted: #6e7681;
+    --blue: #58a6ff;
+    --blue-dim: #1c3057;
+    --green: #3fb950;
+    --orange: #f78166;
+    --gold: #e3b341;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Hero ── */
+  .hero {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 64px 24px 40px;
+    text-align: center;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #f0f6fc;
+    margin-bottom: 16px;
+    line-height: 1.15;
+  }
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 580px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display: inline-block;
+    padding: 12px 24px;
+    background: var(--blue);
+    color: #0d1117;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; text-decoration: none; }
+  .btn-secondary {
+    display: inline-block;
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--surface); text-decoration: none; }
+
+  /* ── How it works ── */
+  .section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px 56px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .how-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .how-sym {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .how-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .how-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* ── Equation ── */
+  .eq-block {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0 8px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 14px;
+    color: #e0e0e0;
+    overflow-x: auto;
+    line-height: 1.9;
+  }
+  .eq-main { font-size: 16px; color: #ffffff; }
+  .eq-note { font-size: 11px; color: #6e7681; margin-top: 8px; }
+
+  /* ── Scenarios ── */
+  .scenarios { display: flex; flex-direction: column; gap: 12px; }
+  .scenario-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .scenario-card:hover { border-color: #388bfd; }
+  .scenario-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 24px;
+    text-align: center;
+  }
+  .scenario-body { flex: 1; }
+  .scenario-title { font-weight: 700; font-size: 15px; margin-bottom: 3px; color: #f0f6fc; }
+  .scenario-params {
+    font-family: 'SF Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .scenario-desc { font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .scenario-watch {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 4px;
+  }
+  .launch-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--blue-dim);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid #388bfd50;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background 0.12s;
+  }
+  .launch-btn:hover { background: #1f4070; text-decoration: none; }
+  .launch-btn.scene2 { background: #2d1a4a; color: #c9a8f5; border-color: #8b5cf650; }
+  .launch-btn.scene2:hover { background: #3a2060; }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 32px 24px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="hero-eyebrow">Interactive Simulation · Economics · Game Theory</div>
+  <h1>Why Does Seniority Always Win?</h1>
+  <p>
+    A mathematical model of workplace rank dynamics. Even when younger people are more capable,
+    organizations reliably re-sort back into age order — and this simulation shows exactly why.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="sim.html">Open Simulation</a>
+    <a class="btn-secondary" href="explainer.html">Read the Theory</a>
+  </div>
+</div>
+
+<!-- ── How it works ── -->
+<div class="section">
+  <div class="section-label">How it works</div>
+  <p style="color:var(--muted); margin-bottom:20px; font-size:14px;">
+    Each dot is an employee. Their horizontal position is fixed by <strong style="color:var(--text)">tenure</strong> (how long they've been around).
+    Their vertical position is <strong style="color:var(--text)">rank</strong> — the only thing that moves.
+    Color shows <strong style="color:var(--text)">competence</strong> (blue = lower, red = higher).
+    When the dots line up along the diagonal, rank perfectly matches tenure: the senior person is on top.
+  </p>
+  <p style="color:var(--muted); margin-bottom:20px; font-size:14px;">
+    Three forces tug on each dot's rank every frame:
+  </p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-sym" style="color:#58a6ff">α · merit</div>
+      <div class="how-name">Meritocratic drift</div>
+      <div class="how-desc">Pulls your rank toward your competence level. Small in most real organizations.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-sym" style="color:#3fb950">β · seniority</div>
+      <div class="how-name">Seniority spring</div>
+      <div class="how-desc">Pulls rank back to what your tenure predicts — like a spring. Captures deferred pay contracts and fairness norms.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-sym" style="color:#f78166">γ · holdup</div>
+      <div class="how-name">Insider holdup</div>
+      <div class="how-desc">Pushes juniors back down when they outrank a senior. Captures the "hostage" power of institutional knowledge.</div>
+    </div>
+  </div>
+  <div class="eq-block">
+    <div class="eq-main">drᵢ = [ α(cᵢ − c̄) &nbsp;−&nbsp; β(rᵢ − sᵢ) &nbsp;−&nbsp; γHᵢ ] dt &nbsp;+&nbsp; σ dWᵢ</div>
+    <div class="eq-note">
+      sᵢ = rank predicted by tenure alone &nbsp;·&nbsp;
+      Hᵢ = holdup pressure from displaced seniors &nbsp;·&nbsp;
+      σ dWᵢ = noise (politics, luck)
+    </div>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:12px;">
+    The key ratio is <strong style="color:var(--text); font-family:monospace">α/β</strong>.
+    Below ~0.5 → seniority wins. Above ~2 → meritocracy. Most real organizations sit around 0.1–0.3.
+    <a href="explainer.html">Full theory →</a>
+  </p>
+</div>
+
+<!-- ── Scenarios ── -->
+<div class="section">
+  <div class="section-label">5 Scenarios to explore</div>
+  <p style="color:var(--muted); margin-bottom:20px; font-size:14px;">
+    Each opens the simulation pre-configured and fires a mutiny after 1 second so you can immediately watch the dynamics.
+    Use the sliders to explore from there.
+  </p>
+  <div class="scenarios">
+
+    <div class="scenario-card">
+      <div class="scenario-num">01</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Seniority dominates</div>
+        <div class="scenario-params">α = 0.30 · β = 1.50 · γ = 0.50</div>
+        <div class="scenario-desc">The baseline — a normal organization. The seniority spring is strong and competence barely matters.</div>
+        <div class="scenario-watch">→ After mutiny, watch the blue line crash and then fully recover. The cloud snaps back to the diagonal.</div>
+      </div>
+      <a class="launch-btn" href="sim.html?alpha=0.3&beta=1.5&gamma=0.5&sigma=0.06&speed=0.7&label=Seniority+dominates&mutiny=1" target="_blank">Launch ↗</a>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">02</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Meritocracy</div>
+        <div class="scenario-params">α = 1.80 · β = 0.30 · γ ≈ 0</div>
+        <div class="scenario-desc">Merit dominates. Rank tracks competence, not age. The seniority spring is nearly absent.</div>
+        <div class="scenario-watch">→ Watch dots self-sort by color over time: red (competent) rises to the top, blue sinks. The orange line stays high.</div>
+      </div>
+      <a class="launch-btn" href="sim.html?alpha=1.8&beta=0.3&gamma=0.05&sigma=0.06&speed=0.7&label=Meritocracy" target="_blank">Launch ↗</a>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">03</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Holdup fortress</div>
+        <div class="scenario-params">α = 0.20 · β = 0.20 · γ = 2.0</div>
+        <div class="scenario-desc">The seniority spring (β) is weak, but seniors grip hard via holdup (γ). Recovery after disruption is driven entirely by institutional-knowledge leverage, not norms.</div>
+        <div class="scenario-watch">→ Recovery is slower and lumpier than Scenario 1, but seniority still wins.</div>
+      </div>
+      <a class="launch-btn" href="sim.html?alpha=0.2&beta=0.2&gamma=2.0&sigma=0.04&speed=0.5&label=Holdup+fortress&mutiny=1" target="_blank">Launch ↗</a>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">04</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Phase boundary</div>
+        <div class="scenario-params">α = 1.0 · β = 1.0 · γ = 0.20</div>
+        <div class="scenario-desc">Merit and seniority forces are exactly balanced. The system sits at the critical transition between two attractors.</div>
+        <div class="scenario-watch">→ After mutiny, the cloud settles loosely — neither the diagonal nor competence-sorting fully wins. Both τ values hover around 0.5.</div>
+      </div>
+      <a class="launch-btn" href="sim.html?alpha=1.0&beta=1.0&gamma=0.2&sigma=0.06&speed=0.7&label=Phase+boundary&mutiny=1" target="_blank">Launch ↗</a>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">05</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Replicator dynamics</div>
+        <div class="scenario-params">Scene 2 · α = 0.30 · β = 0.80 · γ = 1.50</div>
+        <div class="scenario-desc">Seniors now <em>adapt</em> their hoarding strategy in response to threats. Gold rings show each senior's knowledge-hoarding intensity in real time.</div>
+        <div class="scenario-watch">→ After mutiny, gold rings bloom on threatened seniors. As order restores, the rings fade. The equilibrium defends itself.</div>
+      </div>
+      <a class="launch-btn scene2" href="sim.html?alpha=0.3&beta=0.8&gamma=1.5&sigma=0.04&speed=0.6&scene=2&label=Replicator+dynamics&mutiny=1" target="_blank">Launch ↗</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>
+    Built on: Lazear (1979) · Lazear &amp; Rosen (1981) · Lindbeck &amp; Snower (1984) · Akerlof &amp; Yellen (1990) · Pluchino et al. (2010) · Kuran (1989)
+    &nbsp;·&nbsp; <a href="MODEL.md">Model details</a> &nbsp;·&nbsp; <a href="explainer.html">Theory explainer</a>
+  </p>
+</footer>
+
+</body>
+</html>

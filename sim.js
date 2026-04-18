@@ -1,0 +1,479 @@
+// ============================================================
+// Seniority Dynamics — sim.js
+// URL params: alpha, beta, gamma, sigma, speed, n, scene, mutiny, label
+// Euler-Maruyama integration of the rank SDE:
+//   drᵢ = [α(cᵢ−c̄) − β(rᵢ−sᵢ) − γHᵢ] dt + σ dWᵢ
+// ============================================================
+
+let agents = [];
+let currentScene = 1;
+let paused = false;
+let history = [];
+let mutinyMarkers = [];
+let mutinyFlash = 0;
+let pageLabel = '';
+const HISTORY_LEN = 500;
+
+// Layout (set in setup / updateLayout)
+let scatterX, scatterY, scatterW, scatterH;
+let tsX, tsY, tsW, tsH;
+
+// ============================================================
+// p5.js lifecycle
+// ============================================================
+
+function setup() {
+  const container = document.getElementById('canvas-container');
+  const cnv = createCanvas(container.offsetWidth, windowHeight);
+  cnv.parent('canvas-container');
+  updateLayout();
+  applyUrlParams();
+  initAgents();
+  frameRate(60);
+}
+
+function applyUrlParams() {
+  const p = new URLSearchParams(window.location.search);
+  const set = (sliderId, labelId, val, fmt) => {
+    const el = document.getElementById(sliderId);
+    if (el && val !== null) {
+      el.value = val;
+      const lbl = document.getElementById(labelId);
+      if (lbl) lbl.textContent = fmt(parseFloat(val));
+    }
+  };
+  if (p.has('alpha')) set('alpha-slider', 'val-alpha', p.get('alpha'), v => v.toFixed(2));
+  if (p.has('beta'))  set('beta-slider',  'val-beta',  p.get('beta'),  v => v.toFixed(2));
+  if (p.has('gamma')) set('gamma-slider', 'val-gamma', p.get('gamma'), v => v.toFixed(2));
+  if (p.has('sigma')) set('sigma-slider', 'val-sigma', p.get('sigma'), v => v.toFixed(2));
+  if (p.has('speed')) set('speed-slider', 'val-speed', p.get('speed'), v => v.toFixed(2) + '×');
+  if (p.has('n'))     set('n-slider',     'val-n',     p.get('n'),     v => String(Math.round(v)));
+  if (p.has('scene')) setScene(parseInt(p.get('scene')));
+  if (p.has('label')) pageLabel = p.get('label');
+  if (p.has('mutiny')) setTimeout(() => reshuffleMutiny(), 1200);
+}
+
+function draw() {
+  background(13, 17, 23);
+
+  if (!paused) {
+    stepAgents();
+
+    const rP = rankPctiles();
+    const tP = tauPctiles();
+    const cP = compPctiles();
+    const tauRT = kendallTau(tP, rP);
+    const tauRC = kendallTau(cP, rP);
+
+    history.push({ tauRT, tauRC });
+    if (history.length > HISTORY_LEN) history.shift();
+
+    mutinyMarkers = mutinyMarkers.map(m => m - 1).filter(m => m > -HISTORY_LEN);
+
+    document.getElementById('stat-rt').textContent = tauRT.toFixed(3);
+    document.getElementById('stat-rc').textContent = tauRC.toFixed(3);
+  }
+
+  drawScatter();
+  drawTimeSeries();
+}
+
+function windowResized() {
+  const container = document.getElementById('canvas-container');
+  resizeCanvas(container.offsetWidth, windowHeight);
+  updateLayout();
+}
+
+function updateLayout() {
+  const pad = 44;
+  scatterX = pad;
+  scatterY = 36;
+  scatterW = width - pad * 2;
+  scatterH = height * 0.60;
+
+  tsX = pad;
+  tsY = scatterY + scatterH + 34;
+  tsW = width - pad * 2;
+  tsH = height - tsY - pad + 8;
+}
+
+// ============================================================
+// Agents
+// ============================================================
+
+function initAgents() {
+  const N = parseInt(document.getElementById('n-slider').value);
+  agents = [];
+  for (let i = 0; i < N; i++) {
+    agents.push({
+      tau: random(0.05, 1.0),
+      c: constrain(randomGaussian(0.5, 0.18), 0.04, 0.96),
+      r: 0,
+      hoard: 0.2,
+    });
+  }
+  // Start r near the seniority-ordered equilibrium
+  const byTau = [...agents].sort((a, b) => a.tau - b.tau);
+  byTau.forEach((a, i) => {
+    a.r = (i / (agents.length - 1)) * 2 - 1 + randomGaussian(0, 0.07);
+  });
+  history = [];
+  mutinyMarkers = [];
+}
+
+// ============================================================
+// Physics step (Euler-Maruyama)
+// ============================================================
+
+function stepAgents() {
+  const N = agents.length;
+  const speed = getParam('speed-slider');
+  const dt = (1 / 60) * speed;
+  const alpha  = getParam('alpha-slider');
+  const beta   = getParam('beta-slider');
+  const gamma  = getParam('gamma-slider');
+  const sigma  = getParam('sigma-slider');
+  const eps    = 0.05;   // replicator learning rate
+  const decay  = 0.025;  // hoard decay rate
+
+  // Seniority targets: map tenure rank → [−1, 1]
+  const byTau = [...agents].sort((a, b) => a.tau - b.tau);
+  const sMap  = new Map(byTau.map((a, i) => [a, N > 1 ? (i / (N - 1)) * 2 - 1 : 0]));
+  const medianTau = byTau[floor(N / 2)].tau;
+  const cMean = agents.reduce((s, a) => s + a.c, 0) / N;
+
+  const dr = new Float32Array(N);
+  const dh = new Float32Array(N);
+
+  for (let i = 0; i < N; i++) {
+    const a = agents[i];
+    const si = sMap.get(a);
+    const gammaEff = currentScene === 2 ? gamma * a.hoard : gamma;
+
+    // Holdup: sum of (seniority gap) × (rank gap) for each senior j that i outranks
+    let holdup = 0;
+    for (let j = 0; j < N; j++) {
+      if (i === j) continue;
+      const senGap  = agents[j].tau - a.tau;  // positive if j is senior to i
+      const rankGap = a.r - agents[j].r;      // positive if i ranks above j
+      if (senGap > 0 && rankGap > 0) {
+        holdup += senGap * rankGap;
+      }
+    }
+    holdup /= max(N - 1, 1);
+
+    dr[i] = (
+      alpha  * (a.c - cMean)
+      - beta   * (a.r - si)
+      - gammaEff * holdup
+    ) * dt + sigma * sqrt(dt) * randomGaussian();
+
+    // Replicator dynamics (scene 2 only)
+    if (currentScene === 2) {
+      if (a.tau >= medianTau) {
+        // Senior: count juniors currently outranking me
+        let v = 0;
+        for (let j = 0; j < N; j++) {
+          if (agents[j].tau < a.tau && agents[j].r > a.r) v++;
+        }
+        dh[i] = (eps * v - decay * a.hoard) * dt;
+      } else {
+        dh[i] = -decay * 1.5 * a.hoard * dt;
+      }
+    }
+  }
+
+  for (let i = 0; i < N; i++) {
+    agents[i].r += dr[i];
+    if (currentScene === 2) {
+      agents[i].hoard = constrain(agents[i].hoard + dh[i], 0, 1);
+    }
+  }
+}
+
+// ============================================================
+// Statistics
+// ============================================================
+
+function pctileMap(key) {
+  const N = agents.length;
+  const sorted = [...agents].sort((a, b) => a[key] - b[key]);
+  return new Map(sorted.map((a, i) => [a, N > 1 ? i / (N - 1) : 0.5]));
+}
+const rankPctiles = () => { const m = pctileMap('r');   return agents.map(a => m.get(a)); };
+const tauPctiles  = () => { const m = pctileMap('tau'); return agents.map(a => m.get(a)); };
+const compPctiles = () => { const m = pctileMap('c');   return agents.map(a => m.get(a)); };
+
+function kendallTau(xs, ys) {
+  const n = xs.length;
+  let con = 0, dis = 0;
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const d = (xs[j] - xs[i]) * (ys[j] - ys[i]);
+      if (d > 0) con++;
+      else if (d < 0) dis++;
+    }
+  }
+  const denom = n * (n - 1) / 2;
+  return denom > 0 ? (con - dis) / denom : 0;
+}
+
+// ============================================================
+// Rendering — scatter plot
+// ============================================================
+
+function drawScatter() {
+  const sx = scatterX, sy = scatterY, sw = scatterW, sh = scatterH;
+
+  // Panel
+  fill(15, 20, 28);
+  stroke(33, 38, 45);
+  strokeWeight(1);
+  rect(sx, sy, sw, sh, 6);
+
+  // Subtle grid
+  stroke(255, 255, 255, 10);
+  strokeWeight(1);
+  for (let t = 0.25; t < 1; t += 0.25) {
+    line(sx + t * sw, sy, sx + t * sw, sy + sh);
+    line(sx, sy + t * sh, sx + sw, sy + t * sh);
+  }
+
+  // Perfect-seniority diagonal (dashed)
+  stroke(255, 255, 255, 40);
+  strokeWeight(1.5);
+  drawingContext.setLineDash([7, 7]);
+  line(sx, sy + sh, sx + sw, sy);  // (0,0)→(1,1) with y flipped
+  drawingContext.setLineDash([]);
+
+  // Title
+  noStroke();
+  textAlign(LEFT, TOP);
+  textSize(11);
+  fill(139, 148, 158);
+  textStyle(BOLD);
+  const sceneTag = currentScene === 1 ? 'Scene 1: Kinematic SDE' : 'Scene 2: Replicator';
+  const titleStr = pageLabel ? `${pageLabel}` : sceneTag;
+  text(titleStr, sx + 10, sy + 9);
+  textStyle(NORMAL);
+  if (pageLabel) {
+    fill(72, 79, 88);
+    textSize(9.5);
+    text(sceneTag, sx + 10, sy + 22);
+  }
+
+  // Competence key (top-right)
+  textAlign(RIGHT, TOP);
+  textSize(9.5);
+  fill(72, 79, 88);
+  text('dot color = competence  (blue → red)', sx + sw - 8, sy + 9);
+
+  // Axis labels
+  textAlign(CENTER, CENTER);
+  textSize(10);
+  fill(99, 119, 139);
+  text('← junior · tenure · senior →', sx + sw / 2, sy + sh + 16);
+  push();
+  translate(sx - 26, sy + sh / 2);
+  rotate(-HALF_PI);
+  text('rank ↑', 0, 0);
+  pop();
+
+  // Particles
+  const rP = rankPctiles();
+  const tP = tauPctiles();
+  const cP = compPctiles();
+
+  // Hoard rings (scene 2) — draw first so dots appear on top
+  if (currentScene === 2) {
+    noFill();
+    strokeWeight(2.2);
+    for (let i = 0; i < agents.length; i++) {
+      if (agents[i].hoard <= 0.04) continue;
+      const px = sx + tP[i] * sw;
+      const py = sy + (1 - rP[i]) * sh;
+      stroke(255, 195, 40, agents[i].hoard * 190);
+      ellipse(px, py, 16 + agents[i].hoard * 18, 16 + agents[i].hoard * 18);
+    }
+  }
+
+  // Dots — switch colorMode once for the whole batch
+  colorMode(HSB, 360, 100, 100, 255);
+  noStroke();
+  for (let i = 0; i < agents.length; i++) {
+    const px = sx + tP[i] * sw;
+    const py = sy + (1 - rP[i]) * sh;
+    const hue = (1 - cP[i]) * 220;
+    fill(hue, 68, 88, 215);
+    ellipse(px, py, 13, 13);
+  }
+  colorMode(RGB, 255);
+
+  // Mutiny flash overlay
+  if (mutinyFlash > 0) {
+    noStroke();
+    fill(220, 50, 50, map(mutinyFlash, 0, 18, 0, 55));
+    rect(sx, sy, sw, sh, 6);
+    mutinyFlash--;
+  }
+}
+
+// ============================================================
+// Rendering — time series strip
+// ============================================================
+
+function drawTimeSeries() {
+  const tx = tsX, ty = tsY, tw = tsW, th = tsH;
+  const n  = history.length;
+
+  // Panel
+  fill(15, 20, 28);
+  stroke(33, 38, 45);
+  strokeWeight(1);
+  rect(tx, ty, tw, th, 6);
+
+  if (n < 2) return;
+
+  const yMid   = ty + th / 2;
+  const xScale = tw / HISTORY_LEN;
+  const yScale = th / 2 * 0.86;
+
+  // Grid
+  stroke(255, 255, 255, 10);
+  strokeWeight(1);
+  [-0.5, 0.5].forEach(v => line(tx, yMid - v * yScale, tx + tw, yMid - v * yScale));
+  stroke(255, 255, 255, 22);
+  line(tx, yMid, tx + tw, yMid);  // zero line
+
+  // Mutiny event markers
+  stroke(200, 50, 50, 100);
+  strokeWeight(1);
+  for (const m of mutinyMarkers) {
+    const x = tx + tw + m * xScale;
+    if (x >= tx && x <= tx + tw) line(x, ty, x, ty + th);
+  }
+
+  const xAt = (idx) => tx + (HISTORY_LEN - n + idx) * xScale;
+  const yRT = (idx) => yMid - history[idx].tauRT * yScale;
+  const yRC = (idx) => yMid - history[idx].tauRC * yScale;
+
+  // Fill under τ(rank, tenure)
+  noStroke();
+  fill(79, 195, 247, 22);
+  beginShape();
+  vertex(xAt(0), yMid);
+  for (let i = 0; i < n; i++) vertex(xAt(i), yRT(i));
+  vertex(xAt(n - 1), yMid);
+  endShape(CLOSE);
+
+  // τ(rank, tenure) line — blue
+  stroke(79, 195, 247);
+  strokeWeight(2);
+  noFill();
+  beginShape();
+  for (let i = 0; i < n; i++) vertex(xAt(i), yRT(i));
+  endShape();
+
+  // τ(rank, competence) line — orange
+  stroke(255, 112, 67);
+  strokeWeight(2);
+  noFill();
+  beginShape();
+  for (let i = 0; i < n; i++) vertex(xAt(i), yRC(i));
+  endShape();
+
+  // Legend
+  noStroke();
+  textAlign(LEFT, TOP);
+  textSize(9.5);
+  fill(79, 195, 247);
+  text('— τ(rank, tenure)', tx + 8, ty + 6);
+  fill(255, 112, 67);
+  text('— τ(rank, competence)', tx + 8, ty + 19);
+
+  // Axis tick labels
+  fill(72, 79, 88);
+  textAlign(RIGHT, CENTER);
+  textSize(9);
+  text('+1', tx + tw - 3, ty + 11);
+  text('0',  tx + tw - 3, yMid);
+  text('−1', tx + tw - 3, ty + th - 11);
+
+  // Current-value labels at right edge of lines
+  if (n > 0) {
+    const lastRT = history[n - 1].tauRT;
+    const lastRC = history[n - 1].tauRC;
+    const ryRT = constrain(yMid - lastRT * yScale, ty + 6, ty + th - 6);
+    const ryRC = constrain(yMid - lastRC * yScale, ty + 6, ty + th - 6);
+    textAlign(LEFT, CENTER);
+    textSize(9);
+    fill(79, 195, 247);
+    text(lastRT.toFixed(2), tx + tw + 4, ryRT);
+    fill(255, 112, 67);
+    text(lastRC.toFixed(2), tx + tw + 4, ryRC);
+  }
+}
+
+// ============================================================
+// Controls
+// ============================================================
+
+function getParam(id) {
+  return parseFloat(document.getElementById(id).value);
+}
+
+function setScene(n) {
+  currentScene = n;
+  document.getElementById('btn-scene1').classList.toggle('active', n === 1);
+  document.getElementById('btn-scene2').classList.toggle('active', n === 2);
+  if (n === 2) {
+    agents.forEach(a => { a.hoard = 0.2; });
+  }
+}
+
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById('btn-pause');
+  btn.innerHTML = paused
+    ? '<span class="btn-icon">▶</span> Play'
+    : '<span class="btn-icon">⏸</span> Pause';
+}
+
+function reshuffleMutiny() {
+  const rs = agents.map(a => a.r);
+  for (let i = rs.length - 1; i > 0; i--) {
+    const j = floor(random(i + 1));
+    [rs[i], rs[j]] = [rs[j], rs[i]];
+  }
+  agents.forEach((a, i) => { a.r = rs[i]; });
+  mutinyFlash = 18;
+  mutinyMarkers.push(0);
+}
+
+function meritocraticMutiny() {
+  // Assign ranks sorted by competence (most competent → highest rank)
+  const byComp = [...agents].sort((a, b) => a.c - b.c);
+  const rs = [...agents].sort((a, b) => a.r - b.r).map(a => a.r);
+  byComp.forEach((a, i) => { a.r = rs[i]; });
+  mutinyFlash = 18;
+  mutinyMarkers.push(0);
+}
+
+function resetSim() {
+  initAgents();
+  document.getElementById('stat-rt').textContent = '—';
+  document.getElementById('stat-rc').textContent = '—';
+}
+
+function onNChange(val) {
+  document.getElementById('val-n').textContent = val;
+  resetSim();
+}
+
+function updateLabel(name, val) {
+  document.getElementById('val-' + name).textContent = parseFloat(val).toFixed(2);
+}
+
+function updateSpeedLabel(val) {
+  document.getElementById('val-speed').textContent = parseFloat(val).toFixed(2) + '×';
+}

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Make Visuals — Seniority Dynamics</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #c9d1d9; --muted: #6e7681; --blue: #58a6ff;
+    --green: #3fb950; --orange: #f78166; --gold: #e3b341; --purple: #c9a8f5;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px; line-height: 1.6;
+    max-width: 820px; margin: 0 auto; padding: 48px 24px 80px;
+  }
+  h1 { font-size: 22px; font-weight: 800; color: #f0f6fc; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 36px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--muted);
+    margin: 36px 0 14px; padding-top: 36px; border-top: 1px solid var(--border);
+  }
+
+  .tools {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .tool-chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 14px; font-size: 12px; color: var(--text);
+  }
+  .tool-chip strong { color: var(--blue); }
+  .tool-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .card-num {
+    font-size: 11px; font-weight: 700; color: var(--muted);
+    min-width: 22px; padding-top: 2px;
+  }
+  .card-body { flex: 1; }
+  .card-title { font-size: 15px; font-weight: 700; color: #f0f6fc; margin-bottom: 3px; }
+  .card-type {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 4px; margin-left: 6px;
+    vertical-align: middle; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .type-gif { background: #1a3a1a; color: var(--green); }
+  .type-img { background: #1a2a3a; color: var(--blue); }
+  .type-ext { background: #2a2a1a; color: var(--gold); }
+  .card-params { font-family: monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .card-what { font-size: 13px; color: #8b949e; line-height: 1.55; margin-bottom: 8px; }
+  .card-capture {
+    font-size: 12px; color: var(--green);
+    padding: 6px 10px; background: #0d1f0d; border-radius: 6px;
+    border-left: 3px solid var(--green); margin-bottom: 10px;
+  }
+  .card-capture strong { color: #6ee76e; }
+  .launch-btn {
+    display: inline-block; padding: 7px 16px;
+    background: #1c3057; color: var(--blue);
+    font-size: 12px; font-weight: 600; border-radius: 6px;
+    border: 1px solid #388bfd50; text-decoration: none;
+    transition: background 0.12s;
+  }
+  .launch-btn:hover { background: #1f4070; }
+  .launch-btn.purple { background: #2d1a4a; color: var(--purple); border-color: #8b5cf650; }
+  .launch-btn.purple:hover { background: #3a2060; }
+  .launch-btn.ext { background: #2a2a1a; color: var(--gold); border-color: #e3b34150; }
+  .launch-btn.ext:hover { background: #3a3a1a; }
+
+  .tip-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 10px;
+    font-size: 13px; color: #8b949e; line-height: 1.6;
+  }
+  .tip-block strong { color: var(--text); }
+  code {
+    font-family: 'SF Mono', monospace; font-size: 12px;
+    background: #010409; padding: 1px 5px; border-radius: 3px; color: #e0e0e0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Make Visuals</h1>
+<p class="subtitle">Sit down, open a sim, record or screenshot, done. All configs below are pre-set.</p>
+
+<div class="section-label">Recording Tools</div>
+<div class="tools">
+  <div class="tool-chip"><strong>Kap</strong> — free, Mac, exports GIF natively. Best choice.</div>
+  <div class="tool-chip"><strong>QuickTime</strong> → export as video → convert to GIF with ezgif.com</div>
+  <div class="tool-chip"><strong>⌘+Shift+5</strong> → record selected area (video, then convert)</div>
+</div>
+<p class="tool-note">Recommended: hide the sidebar in Kap, record just the canvas area. Target ~600–800px wide. Keep GIFs under 5MB.</p>
+
+<div class="section-label">Captures to Make — Our Simulation</div>
+<div class="cards">
+
+  <div class="card">
+    <div class="card-num">01</div>
+    <div class="card-body">
+      <div class="card-title">Mutiny → recovery <span class="card-type type-gif">GIF — hero asset</span></div>
+      <div class="card-params">α=0.30 · β=1.50 · γ=0.50 · σ=0.06 · speed=0.7</div>
+      <div class="card-what">The core thesis: dots scramble after the mutiny then flow back to the diagonal. This is the one image that explains everything. Will auto-fire the mutiny 1 second after load.</div>
+      <div class="card-capture"><strong>Record:</strong> Start as soon as the sim loads. Let it run ~15–20s. Capture from just before the scramble through the full recovery. Trim tight.</div>
+      <a class="launch-btn" href="sim.html?alpha=0.3&beta=1.5&gamma=0.5&sigma=0.06&speed=0.7&mutiny=1" target="_blank">Launch ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-num">02</div>
+    <div class="card-body">
+      <div class="card-title">Equilibrium state <span class="card-type type-img">Screenshot</span></div>
+      <div class="card-params">α=0.30 · β=1.50 · γ=0.50 · σ=0.02 (low noise for clean look)</div>
+      <div class="card-what">Dots sitting cleanly on the dashed diagonal. Color gradient (blue→red) across the line. This is the beautiful static image — ordered, colorful, geometric.</div>
+      <div class="card-capture"><strong>Wait ~10s</strong> for the dots to fully settle, then screenshot. Pause the sim first (⏸) for a perfectly still frame.</div>
+      <a class="launch-btn" href="sim.html?alpha=0.3&beta=1.5&gamma=0.5&sigma=0.02&speed=1" target="_blank">Launch ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-num">03</div>
+    <div class="card-body">
+      <div class="card-title">Merit sorting <span class="card-type type-gif">GIF</span></div>
+      <div class="card-params">α=1.80 · β=0.30 · γ≈0 · σ=0.06</div>
+      <div class="card-what">No mutiny needed — watch dots gradually sort by color from a reset. Red dots (high competence) rise, blue dots sink. The anti-seniority attractor. Nice contrast to #01.</div>
+      <div class="card-capture"><strong>Hit Reset, then record.</strong> Run ~20–25s. Capture the full drift from random → color-sorted cloud.</div>
+      <a class="launch-btn" href="sim.html?alpha=1.8&beta=0.3&gamma=0.05&sigma=0.06&speed=0.7" target="_blank">Launch ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-num">04</div>
+    <div class="card-body">
+      <div class="card-title">Gold rings blooming (Replicator) <span class="card-type type-gif">GIF</span></div>
+      <div class="card-params">Scene 2 · α=0.30 · β=0.80 · γ=1.50 · σ=0.04</div>
+      <div class="card-what">After the mutiny, gold rings intensify around senior dots (knowledge hoarding). Watch them bloom then fade as order is restored. Visually distinctive — nothing else looks like this.</div>
+      <div class="card-capture"><strong>Record from load.</strong> Focus on the gold rings — zoom the recording window close to the canvas. Let it run ~20s to show the full bloom→fade cycle.</div>
+      <a class="launch-btn purple" href="sim.html?alpha=0.3&beta=0.8&gamma=1.5&sigma=0.04&speed=0.6&scene=2&mutiny=1" target="_blank">Launch ↗</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">External Visuals to Find / Embed</div>
+<div class="cards">
+
+  <div class="card">
+    <div class="card-num">A</div>
+    <div class="card-body">
+      <div class="card-title">Schelling Segregation <span class="card-type type-ext">Find online</span></div>
+      <div class="card-what">Dots self-sorting by color from random noise into clean clusters — identical visual language to our sim. Great "related phenomenon" below the fold on the landing page.</div>
+      <div class="card-capture"><strong>Best source:</strong> ncase.me/polygons — interactive, embeddable, beautiful. Or search "Schelling segregation gif" on Wikipedia or Google Images.</div>
+      <a class="launch-btn ext" href="https://ncase.me/polygons/" target="_blank">Open ncase.me ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-num">B</div>
+    <div class="card-body">
+      <div class="card-title">Bak–Tang–Wiesenfeld Sandpile <span class="card-type type-ext">Find online</span></div>
+      <div class="card-what">A grid that self-organizes then avalanches in fractal color patterns. Self-organized criticality — same "basin of attraction" concept, stunning to look at.</div>
+      <div class="card-capture"><strong>Best source:</strong> Wikipedia "Abelian sandpile model" page has color GIFs. Or search "BTW sandpile animation" on Google Images.</div>
+      <a class="launch-btn ext" href="https://en.wikipedia.org/wiki/Abelian_sandpile_model" target="_blank">Open Wikipedia ↗</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">Quick Tips</div>
+<div class="tip-block">
+  <strong>Canvas size:</strong> Before recording, drag the browser window wider — more canvas = higher-res GIF. Hide bookmarks bar (<code>⌘+Shift+B</code>) to maximize space.
+</div>
+<div class="tip-block">
+  <strong>Speed slider:</strong> For GIFs, try <code>speed=0.5</code> to slow the physics down — easier to see the motion and looks more deliberate on screen.
+</div>
+<div class="tip-block">
+  <strong>GIF size:</strong> Keep under 5MB for web. In Kap, set frame rate to 15fps (not 30) to halve file size with almost no visible quality loss. Or use ezgif.com optimizer after export.
+</div>
+<div class="tip-block">
+  <strong>Priority order:</strong> #01 (mutiny GIF) is the most important. If you only make one thing, make that.
+</div>
+
+</body>
+</html>

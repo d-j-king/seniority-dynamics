@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Seniority Dynamics</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -11,7 +15,7 @@
     --surface: #161b22;
     --border: #21262d;
     --text: #c9d1d9;
-    --muted: #6e7681;
+    --muted: #9aabb8;
     --blue: #58a6ff;
     --blue-dim: #1c3057;
     --green: #3fb950;
@@ -145,14 +149,15 @@
     border-radius: 10px;
     padding: 20px 24px;
     margin: 20px 0 8px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 14px;
     color: #e0e0e0;
     overflow-x: auto;
-    line-height: 1.9;
+    line-height: 1.5;
+    text-align: center;
   }
   .eq-main { font-size: 16px; color: #ffffff; }
-  .eq-note { font-size: 11px; color: #6e7681; margin-top: 8px; }
+  .eq-main .katex-display { margin: 0; }
+  .eq-note { font-size: 11px; color: #9aabb8; margin-top: 10px; }
 
   .scenarios { display: flex; flex-direction: column; gap: 12px; }
   .scenario-card {
@@ -180,7 +185,7 @@
     color: var(--muted);
     margin-bottom: 5px;
   }
-  .scenario-desc { font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .scenario-desc { font-size: 13px; color: #aab4be; line-height: 1.5; }
   .scenario-watch {
     font-size: 12px;
     color: var(--green);
@@ -260,11 +265,11 @@
     </div>
   </div>
   <div class="eq-block">
-    <div class="eq-main">drᵢ = [ α(cᵢ − c̄) &nbsp;−&nbsp; β(rᵢ − sᵢ) &nbsp;−&nbsp; γHᵢ ] dt &nbsp;+&nbsp; σ dWᵢ</div>
+    <div class="eq-main">$$dr_i = \bigl[\,\alpha(c_i - \bar{c}) \;-\; \beta(r_i - s_i) \;-\; \gamma H_i\,\bigr]\,dt \;+\; \sigma\,dW_i$$</div>
     <div class="eq-note">
-      sᵢ = rank predicted by tenure alone &nbsp;·&nbsp;
-      Hᵢ = experience-weighted pressure from tenure-order inversions &nbsp;·&nbsp;
-      σ dWᵢ = random shocks (project outcomes, organizational change)
+      $s_i$ = rank predicted by tenure alone &nbsp;·&nbsp;
+      $H_i$ = experience-weighted pressure from tenure-order inversions &nbsp;·&nbsp;
+      $\sigma\,dW_i$ = random shocks
     </div>
   </div>
   <p style="font-size:13px; color:var(--muted); margin-top:12px;">

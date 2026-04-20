@@ -33,9 +33,7 @@ Define the **seniority target** sᵢ as the z-scored percentile rank of τᵢ am
 
 The **stochastic differential equation** governing rank dynamics:
 
-```
-drᵢ = [ α(cᵢ − c̄)  −  β(rᵢ − sᵢ)  −  γHᵢ ] dt  +  σ dWᵢ
-```
+$$dr_i = \bigl[\,\alpha(c_i - \bar{c}) \;-\; \beta(r_i - s_i) \;-\; \gamma H_i\,\bigr]\,dt \;+\; \sigma\,dW_i$$
 
 **Term by term:**
 
@@ -44,18 +42,14 @@ drᵢ = [ α(cᵢ − c̄)  −  β(rᵢ − sᵢ)  −  γHᵢ ] dt  +  σ dW�
 - **−β(rᵢ − sᵢ)**: seniority restoring force. This is the combined effect of the deferred-comp bond, tournament prize structure, and fairness norms. It pulls each agent's rank back toward what their tenure predicts. β is large when norms are strong and contracts are long-horizon.
 
 - **−γHᵢ**: holdup friction. Hᵢ is the aggregate pressure from displaced seniors:
-  ```
-  Hᵢ = (1/N) Σⱼ  max(0, τⱼ − τᵢ) · max(0, rᵢ − rⱼ)
-  ```
+$$H_i = \frac{1}{N}\sum_{j}\max(0,\,\tau_j - \tau_i)\cdot\max(0,\,r_i - r_j)$$
   This is nonzero only when junior i is ranked above some senior j. The term pushes i back down proportional to how far above j they've risen and how much more senior j is. This is the holdup mechanism: seniors have leverage precisely when they've been displaced.
 
 - **σ dWᵢ**: noise — politics, favoritism, information asymmetry, luck.
 
 **Equilibrium:** Setting the drift to zero in expectation:
 
-```
-E[rᵢ] ≈ sᵢ + (α/β)(cᵢ − c̄)  [ignoring holdup at equilibrium]
-```
+$$\mathbb{E}[r_i] \approx s_i + \frac{\alpha}{\beta}(c_i - \bar{c}) \quad \text{(ignoring holdup at equilibrium)}$$
 
 Rank tracks seniority, with a small competence perturbation scaled by α/β. Most organizations operate with α/β ≪ 1, so tenure dominates. The holdup term reinforces seniority at equilibrium and accelerates recovery after perturbations.
 
@@ -74,9 +68,7 @@ Rank tracks seniority, with a small competence perturbation scaled by α/β. Mos
 
 In Scene 2, each senior carries a **hoarding intensity** hᵢ ∈ [0,1] representing their effort to withhold institutional knowledge. The effective holdup becomes γᵢ = γ · hᵢ. Hoarding evolves as:
 
-```
-dhᵢ/dt = ε · vᵢ  −  δ · hᵢ
-```
+$$\frac{dh_i}{dt} = \varepsilon \cdot v_i \;-\; \delta \cdot h_i$$
 
 Where:
 - **vᵢ** = number of juniors currently outranking senior i (the "violation count")

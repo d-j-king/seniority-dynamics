@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Seniority Dynamics — Theory</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -25,12 +29,14 @@
     border-radius: 10px;
     padding: 24px 28px;
     margin: 24px 0;
-    font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
     font-size: 15px;
-    line-height: 2;
+    line-height: 1.5;
+    text-align: center;
   }
-  .eq-main { font-size: 18px; color: #ffffff; margin-bottom: 8px; }
+  .eq-main { font-size: 18px; color: #ffffff; margin-bottom: 12px; }
+  .eq-main .katex-display { margin: 0; }
   .eq-sub { font-size: 13px; color: #aaa; }
+  .eq-sub .katex-display { margin: 0; }
   .term-row {
     display: flex;
     gap: 16px;
@@ -124,8 +130,8 @@ In almost every real organization, the seniority force wins. The simulation lets
 
 <h2>The Equation</h2>
 <div class="eq-block">
-  <div class="eq-main">drᵢ = [ α(cᵢ − c̄) − β(rᵢ − sᵢ) − γHᵢ ] dt + σ dWᵢ</div>
-  <div class="eq-sub">Hᵢ = (1/N) Σⱼ max(0, τⱼ−τᵢ) · max(0, rᵢ−rⱼ)</div>
+  <div class="eq-main">$$dr_i = \bigl[\,\alpha(c_i - \bar{c}) \;-\; \beta(r_i - s_i) \;-\; \gamma H_i\,\bigr]\,dt \;+\; \sigma\,dW_i$$</div>
+  <div class="eq-sub">$$H_i = \tfrac{1}{N}\sum_{j}\max(0,\,\tau_j - \tau_i)\cdot\max(0,\,r_i - r_j)$$</div>
 </div>
 <p>
 Read it as: <em>the change in your rank each instant = merit pull + seniority pull + holdup pull + luck.</em>
@@ -134,7 +140,7 @@ Read it as: <em>the change in your rank each instant = merit pull + seniority pu
 <h2>Every Term Explained</h2>
 
 <div class="term-row">
-  <div class="term-sym" style="color:#3b82f6">α(cᵢ − c̄)</div>
+  <div class="term-sym" style="color:#3b82f6">$\alpha(c_i - \bar{c})$</div>
   <div class="term-body">
     <div class="term-name">Meritocratic drift <span class="tag tag-lazear">α slider</span></div>
     <div class="term-desc">Pulls your rank up if you're above-average competence, down if below. α controls how much the org actually rewards ability. In most orgs, α is small — talent is noticed slowly and incompletely.</div>
@@ -142,29 +148,29 @@ Read it as: <em>the change in your rank each instant = merit pull + seniority pu
 </div>
 
 <div class="term-row">
-  <div class="term-sym" style="color:#22c55e">−β(rᵢ − sᵢ)</div>
+  <div class="term-sym" style="color:#22c55e">$-\beta(r_i - s_i)$</div>
   <div class="term-body">
     <div class="term-name">Seniority restoring force <span class="tag tag-lazear">β slider</span></div>
     <div class="term-desc">
-      Pulls your rank back toward sᵢ — the rank your <em>tenure alone</em> predicts. Think of it as a spring: the further you've drifted from "your place in line," the harder it pulls you back.<br><br>
+      Pulls your rank back toward $s_i$ — the rank your <em>tenure alone</em> predicts. Think of it as a spring: the further you've drifted from "your place in line," the harder it pulls you back.<br><br>
       Where does this spring come from? Three sources: (1) <strong>deferred compensation</strong> — firms underpay juniors and overpay seniors on purpose; the future overpayment is a bond that breaks if seniority is skipped (Lazear 1979). (2) <strong>Tournament prizes</strong> — the pay gap between ranks is the incentive for everyone below; inverting rank compresses the prize (Lazear &amp; Rosen 1981). (3) <strong>Fairness norms</strong> — everyone watching recalibrates their expectations when the line is jumped (Akerlof &amp; Yellen 1990).
     </div>
   </div>
 </div>
 
 <div class="term-row">
-  <div class="term-sym" style="color:#ef4444">−γHᵢ</div>
+  <div class="term-sym" style="color:#ef4444">$-\gamma H_i$</div>
   <div class="term-body">
     <div class="term-name">Insider holdup <span class="tag tag-lindbeck">γ slider</span></div>
     <div class="term-desc">
-      Hᵢ is nonzero only when junior i is <em>currently outranking</em> some senior j. In that case, a force pushes i back down — proportional to how far above j they've risen and how much more senior j is.<br><br>
+      $H_i$ is nonzero only when junior $i$ is <em>currently outranking</em> some senior $j$. In that case, a force pushes $i$ back down — proportional to how far above $j$ they've risen and how much more senior $j$ is.<br><br>
       This is your "hostage" intuition (Lindbeck &amp; Snower 1984): seniors who've been displaced can withhold cooperation, context, and access, making the junior's contributions less legible to the org. The formula captures the magnitude of their leverage.
     </div>
   </div>
 </div>
 
 <div class="term-row">
-  <div class="term-sym" style="color:#f59e0b">σ dWᵢ</div>
+  <div class="term-sym" style="color:#f59e0b">$\sigma\,dW_i$</div>
   <div class="term-body">
     <div class="term-name">Noise <span class="tag tag-noise">σ slider</span></div>
     <div class="term-desc">Random shocks — politics, visibility, project luck, manager turnover. Not IQ-on-a-bad-day. More like "a key project landed on your desk this quarter that made you look great or terrible." Not essential to the dynamics; set σ ≈ 0 for clean motion.</div>
@@ -174,11 +180,11 @@ Read it as: <em>the change in your rank each instant = merit pull + seniority pu
 <h2>The Variables on Each Dot</h2>
 <table class="slider-table">
   <tr><th>Var</th><th>Name</th><th>What it means</th></tr>
-  <tr><td>τᵢ</td><td>Tenure</td><td>Fixed. Determines x-position on the scatter. Grows very slowly. The "age ordering."</td></tr>
-  <tr><td>cᵢ</td><td>Competence</td><td>Fixed. Shown as dot color — blue = low, red = high. Drawn from a distribution at start.</td></tr>
-  <tr><td>rᵢ</td><td>Rank</td><td>The state variable — the only thing that moves. Determines y-position. This is what the SDE governs.</td></tr>
-  <tr><td>sᵢ</td><td>Seniority target</td><td>The rank τᵢ <em>predicts</em> based on tenure order alone. The spring pulls rᵢ toward sᵢ.</td></tr>
-  <tr><td>Hᵢ</td><td>Holdup force</td><td>Computed from the current positions of all other agents. High when junior i is sitting above many seniors.</td></tr>
+  <tr><td>$\tau_i$</td><td>Tenure</td><td>Fixed. Determines x-position on the scatter. Grows very slowly. The "age ordering."</td></tr>
+  <tr><td>$c_i$</td><td>Competence</td><td>Fixed. Shown as dot color — blue = low, red = high. Drawn from a distribution at start.</td></tr>
+  <tr><td>$r_i$</td><td>Rank</td><td>The state variable — the only thing that moves. Determines y-position. This is what the SDE governs.</td></tr>
+  <tr><td>$s_i$</td><td>Seniority target</td><td>The rank $\tau_i$ <em>predicts</em> based on tenure order alone. The spring pulls $r_i$ toward $s_i$.</td></tr>
+  <tr><td>$H_i$</td><td>Holdup force</td><td>Computed from the current positions of all other agents. High when junior $i$ is sitting above many seniors.</td></tr>
 </table>
 
 <h2>Parameter Regimes (the 5 tabs)</h2>
@@ -207,10 +213,10 @@ Read it as: <em>the change in your rank each instant = merit pull + seniority pu
 
 <h2>Scene 2: The Replicator Layer</h2>
 <div class="scene2">
-  <p>Each senior now carries a <strong>hoarding intensity</strong> hᵢ ∈ [0,1] — how hard they're working to withhold institutional knowledge. The gold ring around a senior dot shows hᵢ.</p>
+  <p>Each senior now carries a <strong>hoarding intensity</strong> $h_i \in [0,1]$ — how hard they're working to withhold institutional knowledge. The gold ring around a senior dot shows $h_i$.</p>
   <div class="eq-block">
-    dhᵢ/dt = ε · vᵢ  −  δ · hᵢ<br>
-    <span style="color:#888; font-size:12px">vᵢ = # juniors currently outranking senior i</span>
+    <div>$$\frac{dh_i}{dt} = \varepsilon \cdot v_i \;-\; \delta \cdot h_i$$</div>
+    <div style="color:#888; font-size:12px; margin-top:4px">$v_i$ = number of juniors currently outranking senior $i$</div>
   </div>
   <p>When a mutiny strikes, violation counts spike → hoarding intensifies → holdup force strengthens → seniority order is restored faster → violations drop → hoarding decays. The equilibrium defends itself endogenously. This is why top-down meritocratic reshuffles tend to fail: they trigger the very behavior (knowledge-hoarding) that reverses them.</p>
 </div>
